@@ -1,0 +1,23 @@
+.cartView {
+  &--item {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 30px;
+  }
+  &--summary {
+    font-size: 28px;
+    display: flex;
+    justify-content: flex-end;
+    box-shadow: grayscale($color: #000000);
+  }
+
+  &--payment {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+  }
+
+  &--totalPrice {
+    margin-right: 10px;
+  }
+}
