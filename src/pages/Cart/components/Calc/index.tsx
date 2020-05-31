@@ -3,6 +3,7 @@ import { View, Button, Input } from '@tarojs/components'
 import './index.scss'
 // import { InputProps } from '@tarojs/components/types/Input'
 // import { BaseEventOrigFunction } from '@tarojs/components/types/common'
+// onInput={onChange}的时候需要定义
 
 interface Props {
   count: number
@@ -19,4 +20,10 @@ export default function Calc (props: Props) {
       <Button plain size='mini' onClick={() => { onChange(cartId, count + 1) }}>+</Button>
     </View>
   )
+}
+
+Calc.defaultProps = {
+  onChange: () => {},
+  count: 0,
+  cartId: null
 }

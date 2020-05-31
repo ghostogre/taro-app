@@ -46,6 +46,7 @@ export default function Cart () {
       items
     }
   })
+
   // const reduxState = useSelector((state: any) => state.cart)
   const onItemClick = (id: string, count: number) => {
     // propsArr[0].name='改'
@@ -87,7 +88,8 @@ export default function Cart () {
   }
 
   // 总价
-  const summary = useMemo(() => {
+  const [summary, setSummary] = useState(0)
+  useEffect(() => {
     let sum = 0
     carts.ids.forEach(id => {
       const item = carts.items[id]
@@ -95,8 +97,32 @@ export default function Cart () {
         sum += (item.price * item.count)
       }
     })
-    return sum
+    setSummary(sum)
+  }, [carts]) // 当选择购物车内商品的时候，同时优惠券也会重新计算总价
+
+  // 是否全选依赖于数组里是否全选
+  const allChecked = useMemo(() => {
+    for (const id of carts.ids) {
+      if (!carts.items[id].selected) { // 有一个不被选中就是false
+        return false
+      }
+    }
+    return true
   }, [carts])
+
+  const onCheckAll = () => {
+    setCarts(prevState => {
+      const { ids, items } = prevState
+      ids.forEach((id) => {
+        items[id].selected = !allChecked
+      })
+      return {
+        ...prevState
+      }
+    })
+  }
+
+
   return (
     <View className='cartView'>
       {
@@ -107,8 +133,13 @@ export default function Cart () {
               key={id}
               className='cartView--item'
             >
-              <Checkbox value={item.selected} data-id={item.id} onClick={onCheckbox} />
-              <View>{item.name}</View>
+              <Checkbox
+                value=''
+                data-id={item.id}
+                onClick={onCheckbox}
+                className='text-label'
+                checked={item.selected}
+              >{item.name}</Checkbox>
               <View>￥{item.price}</View>
               <Calc cartId={item.id} count={item.count} onChange={onChangeItemCount} />
             </View>
@@ -116,6 +147,7 @@ export default function Cart () {
         })
       }
       <View className='cartView--summary'>
+        <Checkbox value='全选' checked={allChecked} onClick={onCheckAll} >全选</Checkbox>
         <View className='cartView--payment'>
           <Text className='cartView--totalPrice'>总价：￥{summary}</Text>
           <Button
@@ -133,4 +165,8 @@ export default function Cart () {
 // Taro.setBackgroundTextStyle
 Cart.config = {
   navigationBarTitleText: '购物车'
+}
+
+Cart.options = {
+  addGlobalClass: true
 }

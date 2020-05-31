@@ -7,14 +7,14 @@
   &--summary {
     font-size: 28px;
     display: flex;
-    justify-content: flex-end;
+    padding: 0 30px;
+    justify-content: space-between;
     box-shadow: grayscale($color: #000000);
   }
 
   &--payment {
     display: flex;
     align-items: center;
-    padding: 10px;
   }
 
   &--totalPrice {
