@@ -1,7 +1,7 @@
 import Taro, { useState, useEffect, useMemo } from '@tarojs/taro'
-import { View, Button, Text, Checkbox } from '@tarojs/components'
-import { useDispatch, useSelector } from '@tarojs/redux'
-import { increase, fetchCart } from '../../actions/cart'
+import { View, Button, Text, Checkbox, CheckboxGroup, Label } from '@tarojs/components'
+import { useDispatch } from '@tarojs/redux'
+import { fetchCart } from '../../actions/cart'
 import './index.scss'
 import Calc from './components/Calc'
 
@@ -12,16 +12,19 @@ export default function Cart () {
     { id: '1', name: '西瓜', price: 12, count: 2 },
     { id: '2', name: '柠檬', price: 11, count: 1 }
   ]
+  // 总价
+  const [summary, setSummary] = useState(0)
   // useDidShow(() => {
   //   fetchCart(propsArr) // 直接放在函数组件或者useState会不停的运行fetch
+  // 每次触发渲染都会重新执行组件函数，所以fetchCart会不停的执行
   // })
-  useMemo(() => {
-    const data = [
+  useEffect(() => {
+    const fetchData = [
       { id: '0', name: '苹果', count: 5 },
       { id: '1', name: '西瓜', count: 2 },
       { id: '2', name: '柠檬', count: 1 }
     ] // data放到外面，每次渲染引用都不一样，就会不停的执行，effect里执行了渲染操作，就会死循环
-    dispatch(fetchCart(data))
+    dispatch(fetchCart(fetchData))
     // useEffect第二个参数为空数组的话，只会在初次渲染执行（或者说保证参数不变的话可以避免渲染
     // 初始化最好放在useEffect/useMemo里
     // 默认情况下，effect 会在每轮组件渲染完成后执行。
@@ -47,23 +50,6 @@ export default function Cart () {
     }
   })
 
-  // const reduxState = useSelector((state: any) => state.cart)
-  const onItemClick = (id: string, count: number) => {
-    // propsArr[0].name='改'
-    // setCarts([...propsArr])
-    setCarts(prevState => {
-      const { items } = prevState
-      items[id].count += count
-      return {
-        ...prevState,
-        items: {
-          ...items
-        }
-      }
-    })
-    dispatch(increase(id))
-  }
-
   // 购物车数量修改
   const onChangeItemCount = (id, count) => {
     count = count * 1
@@ -77,18 +63,19 @@ export default function Cart () {
 
   // 选中购物车
   const onCheckbox = (e) => {
-    const { id } = e.target.dataset
+    const ids = e.detail.value
     setCarts(prevState => {
-      const item = prevState.items[id]
-      item.selected = !item.selected
+      ids.forEach(id => {
+        const item = prevState.items[id]
+        item.selected = !item.selected
+      })
       return {
         ...prevState
       }
     })
   }
 
-  // 总价
-  const [summary, setSummary] = useState(0)
+  // const summary = useMemo(() => {
   useEffect(() => {
     let sum = 0
     carts.ids.forEach(id => {
@@ -103,7 +90,7 @@ export default function Cart () {
   // 是否全选依赖于数组里是否全选
   const allChecked = useMemo(() => {
     for (const id of carts.ids) {
-      if (!carts.items[id].selected) { // 有一个不被选中就是false
+      if (!carts.items[id].selected) {
         return false
       }
     }
@@ -112,9 +99,8 @@ export default function Cart () {
 
   const onCheckAll = () => {
     setCarts(prevState => {
-      const { ids, items } = prevState
-      ids.forEach((id) => {
-        items[id].selected = !allChecked
+      prevState.ids.forEach(id => {
+        prevState.items[id].selected = !allChecked
       })
       return {
         ...prevState
@@ -122,32 +108,44 @@ export default function Cart () {
     })
   }
 
-
   return (
     <View className='cartView'>
-      {
-        carts.ids.map(id => {
-          const item = carts.items[id]
-          return (
-            <View
-              key={id}
-              className='cartView--item'
-            >
-              <Checkbox
-                value=''
-                data-id={item.id}
-                onClick={onCheckbox}
-                className='text-label'
-                checked={item.selected}
-              >{item.name}</Checkbox>
-              <View>￥{item.price}</View>
-              <Calc cartId={item.id} count={item.count} onChange={onChangeItemCount} />
-            </View>
-          )
-        })
-      }
+      <CheckboxGroup onChange={onCheckbox}>
+        {
+          carts.ids.map(id => {
+            const item = carts.items[id]
+            return (
+              <View
+                key={id}
+                className='cartView--item'
+              >
+                <Checkbox
+                  value={item.id}
+                  className='text-label'
+                  checked={item.selected}
+                ></Checkbox>
+                <View>{item.name}</View>
+                <View>￥{item.price}</View>
+                <Calc cartId={item.id} count={item.count} onChange={onChangeItemCount} />
+              </View>
+            )
+          })
+        }
+      </CheckboxGroup>
       <View className='cartView--summary'>
-        <Checkbox value='全选' checked={allChecked} onClick={onCheckAll} >全选</Checkbox>
+        <View>
+          <View className='flex-row ai-center'>
+            <Label>
+              <Checkbox
+                value='全选'
+                checked={allChecked}
+                onClick={onCheckAll}
+                onChange={onCheckAll}
+              ></Checkbox>
+            </Label>
+            <Text>全选</Text>
+          </View>
+        </View>
         <View className='cartView--payment'>
           <Text className='cartView--totalPrice'>总价：￥{summary}</Text>
           <Button
